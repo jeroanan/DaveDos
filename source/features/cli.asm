@@ -3,6 +3,10 @@
 ; Copyright (C) 2006 - 2014 MikeOS Developers -- see doc/LICENSE.TXT
 ;
 ; COMMAND LINE INTERFACE
+;
+; DAVEDOS Mods:
+;     20180827 Add LS command
+;              Add RM command
 ; ==================================================================
 
 
@@ -75,6 +79,12 @@ get_cmd:				; Main processing loop
 	call os_string_compare
 	jc near list_directory
 
+  ; DAVEDOS MOD START 20180827
+  mov di, ls_string     ; 'LS' entered?
+  call os_string_compare
+  jc near list_directory
+  ; DAVEDOS MOD END 20180827
+
 	mov di, ver_string		; 'VER' entered?
 	call os_string_compare
 	jc near print_ver
@@ -94,6 +104,12 @@ get_cmd:				; Main processing loop
 	mov di, del_string		; 'DEL' entered?
 	call os_string_compare
 	jc near del_file
+
+  ; DAVEDOS MOD START 20180827
+  mov di, rm_string
+  call os_string_compare
+  jc near del_file
+  ; DAVEDOS MOD END 20180827
 
 	mov di, copy_string		; 'COPY' entered?
 	call os_string_compare
@@ -556,7 +572,7 @@ exit:
 
 	prompt			db '> ', 0
 
-	help_text		db 'Commands: DIR, COPY, REN, DEL, CAT, SIZE, CLS, HELP, TIME, DATE, VER, EXIT', 13, 10, 0
+	help_text		db 'Commands: DIR, LS, COPY, REN, DEL, RM, CAT, SIZE, CLS, HELP, TIME, DATE, VER, EXIT', 13, 10, 0
 	invalid_msg		db 'No such command or program', 13, 10, 0
 	nofilename_msg		db 'No filename or not enough filenames', 13, 10, 0
 	notfound_msg		db 'File not found', 13, 10, 0
@@ -569,11 +585,13 @@ exit:
 	help_string		db 'HELP', 0
 	cls_string		db 'CLS', 0
 	dir_string		db 'DIR', 0
+  ls_string     db 'LS', 0      ; DAVEDOS MOD 20180827
 	time_string		db 'TIME', 0
 	date_string		db 'DATE', 0
 	ver_string		db 'VER', 0
 	cat_string		db 'CAT', 0
 	del_string		db 'DEL', 0
+  rm_string     db 'RM', 0      ; DAVEDOS MOD 20180827
 	ren_string		db 'REN', 0
 	copy_string		db 'COPY', 0
 	size_string		db 'SIZE', 0
