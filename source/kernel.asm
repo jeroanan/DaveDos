@@ -6,6 +6,9 @@
 ; First we have the system call vectors, which start at a static point
 ; for programs to use. Following that is the main kernel code and
 ; then additional system call code is included.
+;
+; DAVEDOS Mods:
+;     20180827 Boot straight into command prompt rather than selector
 ; ==================================================================
 
 
@@ -176,6 +179,12 @@ no_autorun_bin:
 	; a menu-driven program selector, or a command-line interface
 
 option_screen:
+  ; DAVEDOS MOD START 20180827
+  call os_clear_screen
+  call os_command_line
+  jmp option_screen
+  ; DAVEDOS MOD END 20180827
+
 	mov ax, os_init_msg		; Set up the welcome screen
 	mov bx, os_version_msg
 	mov cx, 10011111b		; Colour: white text on light blue
