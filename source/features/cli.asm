@@ -10,6 +10,7 @@
 ;              Add CP command
 ;              Add MV command
 ;              Remove deprecated DIR, DEL, COPY and REN commands from HELP output.
+;              Add MENU command
 ; ==================================================================
 
 
@@ -138,6 +139,11 @@ get_cmd:				; Main processing loop
 	call os_string_compare
 	jc near size_file
 
+  ; DAVEDOS MOD START 20180827
+  mov di, menu_string   ; 'MENU' entered?
+  call os_string_compare
+  jc near launch_menu
+  ; DAVEDOS MOD END 20180827
 
 	; If the user hasn't entered any of the above commands, then we
 	; need to check for an executable file -- .BIN or .BAS, and the
@@ -469,6 +475,15 @@ size_file:
 
 
 ; ------------------------------------------------------------------
+; DAVEDOS MOD START 20180827
+launch_menu:
+  call os_launch_menu
+  jmp get_cmd
+; DAVEDOS MOD END 20180827
+; ------------------------------------------------------------------
+
+
+; ------------------------------------------------------------------
 
 copy_file:
 	mov word si, [param_list]
@@ -587,7 +602,7 @@ exit:
 
 	prompt			db '> ', 0
 
-	help_text		db 'Commands: LS, CP, MV, RM, CAT, SIZE, CLS, HELP, TIME, DATE, VER, EXIT', 13, 10, 0
+	help_text		db 'Commands: LS, CP, MV, RM, CAT, SIZE, CLS, HELP, TIME, DATE, VER, EXIT, MENU', 13, 10, 0
 	invalid_msg		db 'No such command or program', 13, 10, 0
 	nofilename_msg		db 'No filename or not enough filenames', 13, 10, 0
 	notfound_msg		db 'File not found', 13, 10, 0
@@ -608,10 +623,11 @@ exit:
 	del_string		db 'DEL', 0
   rm_string     db 'RM', 0      ; DAVEDOS MOD 20180827
 	ren_string		db 'REN', 0
-  mv_string     db 'MV', 0     ; DAVEDOS MOD 20180827
+  mv_string     db 'MV', 0      ; DAVEDOS MOD 20180827
 	copy_string		db 'COPY', 0
   cp_string     db 'CP', 0      ; DAVEDOS MOD 20180827
 	size_string		db 'SIZE', 0
+  menu_string   db 'MENU', 0    ; DAVEDOS MOD 20180827
 
 	kern_file_string	db 'KERNEL', 0
 	kern_warn_msg		db 'Cannot execute kernel file!', 13, 10, 0

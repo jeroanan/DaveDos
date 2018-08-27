@@ -164,7 +164,7 @@ no_change:
 no_autorun_bin:
 	mov ax, autorun_bas_file_name
 	call os_file_exists
-	jc option_screen		; Skip next section if AUTORUN.BAS doesn't exist
+	jc start_command_line		; Skip next section if AUTORUN.BAS doesn't exist
 
 	mov cx, 32768			; Otherwise load the program into RAM
 	call os_load_file
@@ -172,198 +172,14 @@ no_autorun_bin:
 	mov ax, 32768
 	call os_run_basic		; Run the kernel's BASIC interpreter
 
-	jmp app_selector		; And go to the app selector menu when BASIC ends
+	jmp start_command_line		; And go to the app selector menu when BASIC ends
 
-
-	; Now we display a dialog box offering the user a choice of
-	; a menu-driven program selector, or a command-line interface
-
-option_screen:
   ; DAVEDOS MOD START 20180827
+start_command_line:
   call os_clear_screen
   call os_command_line
-  jmp option_screen
+  jmp start_command_line
   ; DAVEDOS MOD END 20180827
-
-	mov ax, os_init_msg		; Set up the welcome screen
-	mov bx, os_version_msg
-	mov cx, 10011111b		; Colour: white text on light blue
-	call os_draw_background
-
-	mov ax, dialog_string_1		; Ask if user wants app selector or command-line
-	mov bx, dialog_string_2
-	mov cx, dialog_string_3
-	mov dx, 1			; We want a two-option dialog box (OK or Cancel)
-	call os_dialog_box
-
-	cmp ax, 1			; If OK (option 0) chosen, start app selector
-	jne near app_selector
-
-	call os_clear_screen		; Otherwise clean screen and start the CLI
-	call os_command_line
-
-	jmp option_screen		; Offer menu/CLI choice after CLI has exited
-
-
-	; Data for the above code...
-
-	os_init_msg		db 'Welcome to MikeOS', 0
-	os_version_msg		db 'Version ', MIKEOS_VER, 0
-
-	dialog_string_1		db 'Thanks for trying out MikeOS!', 0
-	dialog_string_2		db 'Please select an interface: OK for the', 0
-	dialog_string_3		db 'program menu, Cancel for command line.', 0
-
-
-
-app_selector:
-	mov ax, os_init_msg		; Draw main screen layout
-	mov bx, os_version_msg
-	mov cx, 10011111b		; Colour: white text on light blue
-	call os_draw_background
-
-	call os_file_selector		; Get user to select a file, and store
-					; the resulting string location in AX
-					; (other registers are undetermined)
-
-	jc option_screen		; Return to the CLI/menu choice screen if Esc pressed
-
-	mov si, ax			; Did the user try to run 'KERNEL.BIN'?
-	mov di, kern_file_name
-	call os_string_compare
-	jc no_kernel_execute		; Show an error message if so
-
-
-	; Next, we need to check that the program we're attempting to run is
-	; valid -- in other words, that it has a .BIN extension
-
-	push si				; Save filename temporarily
-
-	mov bx, si
-	mov ax, si
-	call os_string_length
-
-	mov si, bx
-	add si, ax			; SI now points to end of filename...
-
-	dec si
-	dec si
-	dec si				; ...and now to start of extension!
-
-	mov di, bin_ext
-	mov cx, 3
-	rep cmpsb			; Are final 3 chars 'BIN'?
-	jne not_bin_extension		; If not, it might be a '.BAS'
-
-	pop si				; Restore filename
-
-
-	mov ax, si
-	mov cx, 32768			; Where to load the program file
-	call os_load_file		; Load filename pointed to by AX
-
-
-execute_bin_program:
-	call os_clear_screen		; Clear screen before running
-
-	mov ax, 0			; Clear all registers
-	mov bx, 0
-	mov cx, 0
-	mov dx, 0
-	mov si, 0
-	mov di, 0
-
-	call 32768			; Call the external program code,
-					; loaded at second 32K of segment
-					; (program must end with 'ret')
-
-	call os_clear_screen		; When finished, clear screen
-	jmp app_selector		; and go back to the program list
-
-
-no_kernel_execute:			; Warn about trying to executing kernel!
-	mov ax, kerndlg_string_1
-	mov bx, kerndlg_string_2
-	mov cx, kerndlg_string_3
-	mov dx, 0			; One button for dialog box
-	call os_dialog_box
-
-	jmp app_selector		; Start over again...
-
-
-not_bin_extension:
-	pop si				; We pushed during the .BIN extension check
-
-	push si				; Save it again in case of error...
-
-	mov bx, si
-	mov ax, si
-	call os_string_length
-
-	mov si, bx
-	add si, ax			; SI now points to end of filename...
-
-	dec si
-	dec si
-	dec si				; ...and now to start of extension!
-
-	mov di, bas_ext
-	mov cx, 3
-	rep cmpsb			; Are final 3 chars 'BAS'?
-	jne not_bas_extension		; If not, error out
-
-
-	pop si
-
-	mov ax, si
-	mov cx, 32768			; Where to load the program file
-	call os_load_file		; Load filename pointed to by AX
-
-	call os_clear_screen		; Clear screen before running
-
-	mov ax, 32768
-	mov si, 0			; No params to pass
-	call os_run_basic		; And run our BASIC interpreter on the code!
-
-	mov si, basic_finished_msg
-	call os_print_string
-	call os_wait_for_key
-
-	call os_clear_screen
-	jmp app_selector		; and go back to the program list
-
-
-not_bas_extension:
-	pop si
-
-	mov ax, ext_string_1
-	mov bx, ext_string_2
-	mov cx, 0
-	mov dx, 0			; One button for dialog box
-	call os_dialog_box
-
-	jmp app_selector		; Start over again...
-
-
-	; And now data for the above code...
-
-	kern_file_name		db 'KERNEL.BIN', 0
-
-	autorun_bin_file_name	db 'AUTORUN.BIN', 0
-	autorun_bas_file_name	db 'AUTORUN.BAS', 0
-
-	bin_ext			db 'BIN'
-	bas_ext			db 'BAS'
-
-	kerndlg_string_1	db 'Cannot load and execute MikeOS kernel!', 0
-	kerndlg_string_2	db 'KERNEL.BIN is the core of MikeOS, and', 0
-	kerndlg_string_3	db 'is not a normal program.', 0
-
-	ext_string_1		db 'Invalid filename extension! You can', 0
-	ext_string_2		db 'only execute .BIN or .BAS programs.', 0
-
-	basic_finished_msg	db '>>> BASIC program finished -- press a key', 0
-
 
 ; ------------------------------------------------------------------
 ; SYSTEM VARIABLES -- Settings for programs and system calls
@@ -392,6 +208,7 @@ not_bas_extension:
 	%INCLUDE "features/sound.asm"
 	%INCLUDE "features/string.asm"
 	%INCLUDE "features/basic.asm"
+	%INCLUDE "features/menu.asm"      ; DAVEDOS MOD 20180827
 
 
 ; ==================================================================
