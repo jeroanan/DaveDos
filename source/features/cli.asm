@@ -11,6 +11,7 @@
 ;              Add MV command
 ;              Remove deprecated DIR, DEL, COPY and REN commands from HELP output.
 ;              Add MENU command
+;              Remove EXIT command
 ; ==================================================================
 
 
@@ -66,10 +67,6 @@ get_cmd:				; Main processing loop
 	call os_string_uppercase
 
 	mov si, input
-
-	mov di, exit_string		; 'EXIT' entered?
-	call os_string_compare
-	jc near exit
 
 	mov di, help_string		; 'HELP' entered?
 	call os_string_compare
@@ -579,14 +576,7 @@ ren_file:
 	.success_msg	db 'File renamed successfully', 13, 10, 0
 	.failure_msg	db 'Operation failed - file not found or invalid filename', 13, 10, 0
 
-
-; ------------------------------------------------------------------
-
-exit:
 	ret
-
-
-; ------------------------------------------------------------------
 
 	input			times 256 db 0
 	command			times 32 db 0
@@ -602,7 +592,7 @@ exit:
 
 	prompt			db '> ', 0
 
-	help_text		db 'Commands: LS, CP, MV, RM, CAT, SIZE, CLS, HELP, TIME, DATE, VER, EXIT, MENU', 13, 10, 0
+	help_text		db 'Commands: LS, CP, MV, RM, CAT, SIZE, CLS, HELP, TIME, DATE, VER, MENU', 13, 10, 0
 	invalid_msg		db 'No such command or program', 13, 10, 0
 	nofilename_msg		db 'No filename or not enough filenames', 13, 10, 0
 	notfound_msg		db 'File not found', 13, 10, 0
@@ -611,7 +601,6 @@ exit:
 
 	version_msg		db 'MikeOS ', MIKEOS_VER, 13, 10, 0
 
-	exit_string		db 'EXIT', 0
 	help_string		db 'HELP', 0
 	cls_string		db 'CLS', 0
 	dir_string		db 'DIR', 0
