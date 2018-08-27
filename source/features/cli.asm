@@ -7,6 +7,9 @@
 ; DAVEDOS Mods:
 ;     20180827 Add LS command
 ;              Add RM command
+;              Add CP command
+;              Add MV command
+;              Remove deprecated DIR, DEL, COPY and REN commands from HELP output.
 ; ==================================================================
 
 
@@ -106,7 +109,7 @@ get_cmd:				; Main processing loop
 	jc near del_file
 
   ; DAVEDOS MOD START 20180827
-  mov di, rm_string
+  mov di, rm_string    ; 'RM' entered?
   call os_string_compare
   jc near del_file
   ; DAVEDOS MOD END 20180827
@@ -115,9 +118,21 @@ get_cmd:				; Main processing loop
 	call os_string_compare
 	jc near copy_file
 
+  ; DAVEDOS MOD START 20180827
+  mov di, cp_string     ; 'CP' entered?
+  call os_string_compare
+  jc near copy_file
+  ; DAVEDOS MOD END 20180827
+
 	mov di, ren_string		; 'REN' entered?
 	call os_string_compare
 	jc near ren_file
+
+  ; DAVEDOS MOD START 20180827
+  mov di, mv_string     ; 'MV' entered?
+  call os_string_compare
+  jc near ren_file
+  ; DAVEDOS MOD END 20180827
 
 	mov di, size_string		; 'SIZE' entered?
 	call os_string_compare
@@ -572,7 +587,7 @@ exit:
 
 	prompt			db '> ', 0
 
-	help_text		db 'Commands: DIR, LS, COPY, REN, DEL, RM, CAT, SIZE, CLS, HELP, TIME, DATE, VER, EXIT', 13, 10, 0
+	help_text		db 'Commands: LS, CP, MV, RM, CAT, SIZE, CLS, HELP, TIME, DATE, VER, EXIT', 13, 10, 0
 	invalid_msg		db 'No such command or program', 13, 10, 0
 	nofilename_msg		db 'No filename or not enough filenames', 13, 10, 0
 	notfound_msg		db 'File not found', 13, 10, 0
@@ -593,7 +608,9 @@ exit:
 	del_string		db 'DEL', 0
   rm_string     db 'RM', 0      ; DAVEDOS MOD 20180827
 	ren_string		db 'REN', 0
+  mv_string     db 'MV', 0     ; DAVEDOS MOD 20180827
 	copy_string		db 'COPY', 0
+  cp_string     db 'CP', 0      ; DAVEDOS MOD 20180827
 	size_string		db 'SIZE', 0
 
 	kern_file_string	db 'KERNEL', 0
